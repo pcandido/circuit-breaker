@@ -1,0 +1,2 @@
+* implementar com request http pra ver concorrencia
+* no half-open, deixar passar só uma parte
