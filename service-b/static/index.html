@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Panel</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <style>
+    body {
+      font-family: Helvetica, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 300px;
+    }
+
+    .slider-container {
+      margin-bottom: 20px;
+    }
+
+    .slider-label {
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .slider {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="slider-container">
+      <div class="slider-label">Success Rate</div>
+      <div id="successRateSlider" class="slider"></div>
+      <span id="successRateValue">99%</span>
+    </div>
+    <div class="slider-container">
+      <div class="slider-label">Latency</div>
+      <div id="latencySlider" class="slider"></div>
+      <span id="latencyMinValue">0ms</span> - <span id="latencyMaxValue">200ms</span>
+    </div>
+    <button id="applyButton">Apply</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+  <script>
+    function showToast(message) {
+      const toast = $('#toast');
+      toast.text(message);
+      toast.fadeIn(400).delay(3000).fadeOut(400);
+    }
+
+    $(function () {
+      $('#successRateSlider').slider({
+        range: "min",
+        min: 0,
+        max: 100,
+        value: 99,
+        slide: function (event, ui) {
+          $('#successRateValue').text(ui.value + '%');
+        }
+      });
+
+      $('#successRateValue').text($('#successRateSlider').slider('value') + '%');
+
+      $('#latencySlider').slider({
+        range: true,
+        min: 0,
+        max: 10000,
+        values: [0, 200],
+        slide: function (event, ui) {
+          $('#latencyMinValue').text(ui.values[0] + 'ms');
+          $('#latencyMaxValue').text(ui.values[1] + 'ms');
+        }
+      });
+
+      $('#latencyMinValue').text($('#latencySlider').slider('values', 0) + 'ms');
+      $('#latencyMaxValue').text($('#latencySlider').slider('values', 1) + 'ms');
+
+      $('#applyButton').click(function() {
+        const successRate = $('#successRateSlider').slider('value');
+        const latencyMin = $('#latencySlider').slider('values', 0);
+        const latencyMax = $('#latencySlider').slider('values', 1);
+
+        $.post('/config', {
+          successRate: successRate,
+          latencyMin: latencyMin,
+          latencyMax: latencyMax
+        })
+        .done(function() {
+          showToast('Settings applied successfully');
+        })
+        .fail(function() {
+          showToast('Error applying settings');
+        });
+      });
+    });
+  </script>
+</body>
+</html>
