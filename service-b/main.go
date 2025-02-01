@@ -27,6 +27,7 @@ func main() {
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/", fs)
 
+	http.HandleFunc("/healthcheck", healthCheckHandler)
 	http.HandleFunc("/process", processHandler)
 	http.HandleFunc("/config", configHandler)
 
@@ -35,6 +36,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
 
 func processHandler(w http.ResponseWriter, r *http.Request) {
