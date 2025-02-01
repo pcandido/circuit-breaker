@@ -34,16 +34,22 @@ func NewCircuitBreaker(failureThreshold, successThreshold int64, keepOpenFor tim
 }
 
 func (cb *CircuitBreaker) Call(fn func() (*http.Response, error)) (*http.Response, error) {
+	defer cb.traceState()
+
 	if cb.keepOpen() {
+		cb.traceCall(false)
 		return nil, fmt.Errorf("circuit breaker is still open")
 	}
 
 	res, err := fn()
+	cb.traceCall(true)
 
 	if err != nil || res == nil || res.StatusCode >= 500 {
 		cb.onError()
+		cb.traceRequest(false)
 	} else {
 		cb.onSuccess()
+		cb.traceRequest(true)
 	}
 
 	return res, err
@@ -77,4 +83,27 @@ func (cb *CircuitBreaker) onError() {
 		log.Println("Circuit breaker is open")
 		atomic.StoreInt32(&cb.state, open)
 	}
+}
+
+func (cb *CircuitBreaker) traceState() {
+	circuitBreakerState.WithLabelValues().Set(float64(atomic.LoadInt32(&cb.state)))
+}
+
+func (cb *CircuitBreaker) traceCall(executed bool) {
+	callsTotal.WithLabelValues("total").Inc()
+	if executed {
+		callsTotal.WithLabelValues("executed").Inc()
+	} else {
+		callsTotal.WithLabelValues("avoided").Inc()
+	}
+}
+
+func (cb *CircuitBreaker) traceRequest(success bool) {
+	requestsTotal.WithLabelValues("total").Inc()
+	if success {
+		requestsTotal.WithLabelValues("success").Inc()
+	} else {
+		requestsTotal.WithLabelValues("error").Inc()
+	}
+
 }

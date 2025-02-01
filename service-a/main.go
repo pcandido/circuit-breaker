@@ -20,6 +20,8 @@ func main() {
 		Timeout: 2 * time.Second,
 	}
 
+	StartPrometheusExporter()
+
 	for i := 0; i < 10; i++ {
 		go func() {
 			for {
