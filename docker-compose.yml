@@ -1,0 +1,26 @@
+networks:
+  default:
+
+services:
+  service-a:
+    build: ./service-a
+    container_name: service-a
+    environment:
+      - SERVICE_B_BASE_URL=http://service-b:8080
+    networks:
+      - default
+    depends_on:
+      - service-b
+
+  service-b:
+    build: ./service-b
+    container_name: service-b
+    networks:
+      - default
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthcheck"]
+      interval: 30s
+      timeout: 2s
+      retries: 3
