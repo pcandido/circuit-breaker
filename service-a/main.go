@@ -45,4 +45,6 @@ func main() {
 			}
 		}()
 	}
+
+	select {}
 }
